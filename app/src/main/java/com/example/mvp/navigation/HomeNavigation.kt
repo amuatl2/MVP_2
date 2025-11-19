@@ -8,7 +8,9 @@ sealed class Screen(val route: String) {
     object TicketDetail : Screen("ticket_detail/{ticketId}") {
         fun createRoute(ticketId: String) = "ticket_detail/$ticketId"
     }
-    object Marketplace : Screen("marketplace")
+    object Marketplace : Screen("marketplace/{ticketId}") {
+        fun createRoute(ticketId: String? = null) = if (ticketId != null) "marketplace/$ticketId" else "marketplace/null"
+    }
     object ContractorProfile : Screen("contractor_profile/{contractorId}") {
         fun createRoute(contractorId: String) = "contractor_profile/$contractorId"
     }
@@ -16,7 +18,9 @@ sealed class Screen(val route: String) {
     object JobDetail : Screen("job_detail/{jobId}") {
         fun createRoute(jobId: String) = "job_detail/$jobId"
     }
-    object Schedule : Screen("schedule")
+    object Schedule : Screen("schedule/{ticketId}") {
+        fun createRoute(ticketId: String? = null) = if (ticketId != null) "schedule/$ticketId" else "schedule/null"
+    }
     object Rating : Screen("rating/{jobId}") {
         fun createRoute(jobId: String) = "rating/$jobId"
     }

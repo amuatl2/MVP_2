@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun CreateTicketScreen(
     onBack: () -> Unit,
-    onSubmit: (String, String, String) -> Unit
+    onSubmit: (String, String, String, String) -> Unit
 ) {
     val context = LocalContext.current
     var title by remember { mutableStateOf("") }
@@ -363,7 +363,7 @@ fun CreateTicketScreen(
         Button(
             onClick = {
                 if (title.isNotEmpty() && description.isNotEmpty() && category.isNotEmpty()) {
-                    onSubmit(title, description, category)
+                    onSubmit(title, description, category, priority)
                     submitted = true
                 }
             },

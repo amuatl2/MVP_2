@@ -25,12 +25,13 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ScheduleScreen(
     tickets: List<Ticket> = emptyList(),
+    defaultTicketId: String? = null,
     onBack: () -> Unit,
     onConfirm: (String, String, String?) -> Unit
 ) {
     var selectedDate by remember { mutableStateOf<LocalDate?>(LocalDate.of(2025, 11, 1)) }
     var selectedTime by remember { mutableStateOf<String?>(null) }
-    var selectedTicket by remember { mutableStateOf<String?>(null) }
+    var selectedTicket by remember { mutableStateOf<String?>(defaultTicketId) }
     var currentMonth by remember { mutableStateOf(LocalDate.of(2025, 11, 1)) }
     var confirmed by remember { mutableStateOf(false) }
 

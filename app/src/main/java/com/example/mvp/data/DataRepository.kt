@@ -20,7 +20,7 @@ class DataRepository(private val context: Context) {
     // Keys for storing data per user
     private fun ticketsKey(userEmail: String) = stringPreferencesKey("tickets_$userEmail")
     private fun jobsKey(userEmail: String) = stringPreferencesKey("jobs_$userEmail")
-    private fun currentUserKey = stringPreferencesKey("current_user")
+    private val currentUserKey = stringPreferencesKey("current_user")
     
     // Save current user
     suspend fun saveCurrentUser(user: User) {

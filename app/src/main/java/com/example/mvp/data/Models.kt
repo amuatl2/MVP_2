@@ -10,6 +10,14 @@ enum class UserRole {
     TENANT, LANDLORD, CONTRACTOR
 }
 
+data class Message(
+    val id: String,
+    val text: String,
+    val senderEmail: String,
+    val senderName: String,
+    val timestamp: String
+)
+
 data class Ticket(
     val id: String,
     val title: String,
@@ -27,7 +35,8 @@ data class Ticket(
     val assignedContractor: String? = null,
     val createdDate: String? = null,
     val priority: String? = null,
-    val ticketNumber: String? = null
+    val ticketNumber: String? = null,
+    val messages: List<Message> = emptyList()
 )
 
 enum class TicketStatus {

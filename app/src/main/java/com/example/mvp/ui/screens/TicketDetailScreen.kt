@@ -23,7 +23,10 @@ fun TicketDetailScreen(
     onBack: () -> Unit,
     onAssignContractor: () -> Unit,
     onScheduleVisit: () -> Unit,
-    userRole: com.example.mvp.data.UserRole
+    userRole: com.example.mvp.data.UserRole,
+    currentUserEmail: String? = null,
+    currentUserName: String? = null,
+    onAddMessage: ((com.example.mvp.data.Message) -> Unit)? = null
 ) {
     Column(
         modifier = Modifier
@@ -306,10 +309,34 @@ fun TicketDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         
-                        var messages by remember { mutableStateOf(listOf(
-                            "Tenant: Issue reported. Please address as soon as possible."
-                        )) }
                         var newMessage by remember { mutableStateOf("") }
+                        val messages = ticket.messages
+                        
+                        // Show initial message if no messages exist
+                        if (messages.isEmpty()) {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp)
+                                ) {
+                                    Text(
+                                        text = "Tenant: Issue reported. Please address as soon as possible.",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = ticket.createdAt.split("T").firstOrNull() ?: "",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                         
                         messages.forEach { message ->
                             Card(
@@ -322,12 +349,12 @@ fun TicketDetailScreen(
                                     modifier = Modifier.padding(12.dp)
                                 ) {
                                     Text(
-                                        text = message,
+                                        text = "${message.senderName}: ${message.text}",
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = ticket.createdAt.split("T").firstOrNull() ?: "",
+                                        text = message.timestamp,
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                     )
@@ -348,12 +375,19 @@ fun TicketDetailScreen(
                             )
                             Button(
                                 onClick = {
-                                    if (newMessage.isNotBlank()) {
-                                        messages = messages + newMessage
+                                    if (newMessage.isNotBlank() && onAddMessage != null && currentUserEmail != null) {
+                                        val message = com.example.mvp.data.Message(
+                                            id = "msg-${System.currentTimeMillis()}",
+                                            text = newMessage,
+                                            senderEmail = currentUserEmail,
+                                            senderName = currentUserName ?: "User",
+                                            timestamp = java.time.LocalDateTime.now().toString()
+                                        )
+                                        onAddMessage(message)
                                         newMessage = ""
                                     }
                                 },
-                                enabled = newMessage.isNotBlank()
+                                enabled = newMessage.isNotBlank() && onAddMessage != null
                             ) {
                                 Text("Send")
                             }

@@ -71,10 +71,10 @@ fun HomeApp() {
                                 popUpTo(Screen.Dashboard.route) { inclusive = true }
                             }
                             "create_ticket" -> navController.navigate(Screen.CreateTicket.route)
-                            "marketplace" -> navController.navigate(Screen.Marketplace.route)
+                            "marketplace" -> navController.navigate(Screen.Marketplace.createRoute(null))
                             "ai_diagnosis" -> navController.navigate(Screen.AIDiagnosis.route)
                             "contractor_dashboard" -> navController.navigate(Screen.ContractorDashboard.route)
-                            "schedule" -> navController.navigate(Screen.Schedule.route)
+                            "schedule" -> navController.navigate(Screen.Schedule.createRoute(null))
                             "history" -> navController.navigate(Screen.History.route)
                             "chat" -> navController.navigate(Screen.Chat.route)
                             "rating" -> {
@@ -107,9 +107,9 @@ fun HomeApp() {
                                 popUpTo(Screen.Dashboard.route) { inclusive = true }
                             }
                             "create_ticket" -> navController.navigate(Screen.CreateTicket.route)
-                            "marketplace" -> navController.navigate(Screen.Marketplace.route)
+                            "marketplace" -> navController.navigate(Screen.Marketplace.createRoute(null))
                             "contractor_dashboard" -> navController.navigate(Screen.ContractorDashboard.route)
-                            "schedule" -> navController.navigate(Screen.Schedule.route)
+                            "schedule" -> navController.navigate(Screen.Schedule.createRoute(null))
                             "history" -> navController.navigate(Screen.History.route)
                             "chat" -> navController.navigate(Screen.Chat.route)
                         }
@@ -197,7 +197,9 @@ fun HomeApp() {
             composable(Screen.CreateTicket.route) {
                 CreateTicketScreen(
                     onBack = { navController.popBackStack() },
-                    onSubmit = { title, description, category ->
+                    onSubmit = { title, description, category, priority ->
+                        val now = java.time.LocalDateTime.now()
+                        val dateStr = now.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
                         val newTicket = Ticket(
                             id = "ticket-${System.currentTimeMillis()}",
                             title = title,
@@ -206,7 +208,10 @@ fun HomeApp() {
                             status = TicketStatus.SUBMITTED,
                             submittedBy = currentUser?.email ?: "",
                             aiDiagnosis = "AI Suggestion: $category - Auto-detected",
-                            createdAt = java.time.LocalDateTime.now().toString()
+                            createdAt = now.toString(),
+                            createdDate = dateStr,
+                            priority = priority,
+                            ticketNumber = "${System.currentTimeMillis() % 100000}"
                         )
                         viewModel.addTicket(newTicket)
                     }
@@ -229,18 +234,26 @@ fun HomeApp() {
                         contractor = contractor,
                         onBack = { navController.popBackStack() },
                         onAssignContractor = {
-                            navController.navigate(Screen.Marketplace.route + "?ticketId=$ticketId")
+                            navController.navigate(Screen.Marketplace.createRoute(ticketId))
                         },
                         onScheduleVisit = {
-                            navController.navigate(Screen.Schedule.route)
+                            navController.navigate(Screen.Schedule.createRoute(ticketId))
                         },
-                        userRole = currentUser?.role ?: UserRole.TENANT
+                        userRole = currentUser?.role ?: UserRole.TENANT,
+                        currentUserEmail = currentUser?.email,
+                        currentUserName = currentUser?.name,
+                        onAddMessage = { message ->
+                            viewModel.addMessageToTicket(ticketId, message)
+                        }
                     )
                 }
             }
 
-            composable(Screen.Marketplace.route) {
-                val ticketId = null // Can be enhanced with query parameters later
+            composable(
+                route = Screen.Marketplace.route,
+                arguments = listOf(navArgument("ticketId") { type = NavType.StringType; nullable = true })
+            ) { backStackEntry ->
+                val ticketId = backStackEntry.arguments?.getString("ticketId")?.takeIf { it != "null" }
                 MarketplaceScreen(
                     contractors = contractors,
                     tickets = tickets,
@@ -254,8 +267,12 @@ fun HomeApp() {
                         }
                     },
                     onApplyToJob = { jobTicketId ->
-                        // For contractors applying to jobs - navigate to ticket detail
-                        navController.navigate(Screen.TicketDetail.createRoute(jobTicketId))
+                        // For contractors applying to jobs - assign them to the ticket
+                        val contractorId = viewModel.getContractorIdForUser(currentUser)
+                        if (contractorId != null) {
+                            viewModel.assignContractor(jobTicketId, contractorId)
+                            navController.popBackStack()
+                        }
                     },
                     userRole = currentUser?.role ?: UserRole.TENANT,
                     ticketId = ticketId
@@ -324,18 +341,19 @@ fun HomeApp() {
                 }
             }
 
-            composable(Screen.Schedule.route) {
+            composable(
+                route = Screen.Schedule.route,
+                arguments = listOf(navArgument("ticketId") { type = NavType.StringType; nullable = true })
+            ) { backStackEntry ->
+                val routeTicketId = backStackEntry.arguments?.getString("ticketId")?.takeIf { it != "null" }
                 ScheduleScreen(
                     tickets = tickets,
+                    defaultTicketId = routeTicketId,
                     onBack = { navController.popBackStack() },
                     onConfirm = { date, time, ticketId ->
                         // Handle schedule confirmation - update ticket with scheduled date/time
                         ticketId?.let { id ->
-                            val ticket = tickets.find { it.id == id }
-                            ticket?.let {
-                                // Update ticket status to SCHEDULED
-                                // In a real app, this would update the ViewModel
-                            }
+                            viewModel.scheduleTicket(id, date, time)
                         }
                         navController.popBackStack()
                     }
@@ -410,7 +428,7 @@ fun HomeApp() {
                                 Text(text = ticket.aiDiagnosis ?: "")
                                 Button(
                                     onClick = {
-                                        navController.navigate(Screen.Marketplace.route)
+                                        navController.navigate(Screen.Marketplace.createRoute(null))
                                     }
                                 ) {
                                     Text("Assign Contractor")

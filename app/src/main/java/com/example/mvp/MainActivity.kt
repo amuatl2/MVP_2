@@ -58,7 +58,7 @@ fun HomeApp() {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-
+    // Comment Test
     Scaffold(
         topBar = {
             if (currentUser != null && currentRoute != Screen.Login.route) {

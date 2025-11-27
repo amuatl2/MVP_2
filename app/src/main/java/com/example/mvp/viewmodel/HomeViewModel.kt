@@ -57,18 +57,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _maintenanceReminders = MutableStateFlow<List<MaintenanceReminder>>(emptyList())
     val maintenanceReminders: StateFlow<List<MaintenanceReminder>> = _maintenanceReminders.asStateFlow()
     
-    // Budgets
-    private val _budgets = MutableStateFlow<List<Budget>>(emptyList())
-    val budgets: StateFlow<List<Budget>> = _budgets.asStateFlow()
-    
-    // Documents
-    private val _documents = MutableStateFlow<List<Document>>(emptyList())
-    val documents: StateFlow<List<Document>> = _documents.asStateFlow()
-    
-    // Enhanced Reviews
-    private val _enhancedReviews = MutableStateFlow<List<EnhancedReview>>(emptyList())
-    val enhancedReviews: StateFlow<List<EnhancedReview>> = _enhancedReviews.asStateFlow()
-    
     // Dark mode preference
     private val _isDarkMode = MutableStateFlow(false)
     val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
@@ -224,15 +212,15 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     return@launch
                 }
                 
-                val user = User(
+                    val user = User(
                     email = registeredUser.email,
                     role = registeredUser.role,
                     name = registeredUser.name
-                )
-                _currentUser.value = user
-                dataRepository.saveCurrentUser(user)
-                rememberMe = remember
-                loadUserData(user)
+                    )
+                    _currentUser.value = user
+                    dataRepository.saveCurrentUser(user)
+                    rememberMe = remember
+                    loadUserData(user)
                 return@launch
             }
             
@@ -819,97 +807,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             _maintenanceReminders.value = updatedReminders
             if (!useFirebase) {
                 dataRepository.saveMaintenanceReminders(_currentUser.value?.email ?: "", updatedReminders)
-            }
-        }
-    }
-    
-    // Budget methods
-    fun addBudget(budget: Budget) {
-        viewModelScope.launch {
-            if (!useFirebase) {
-                val updatedBudgets = _budgets.value + budget
-                _budgets.value = updatedBudgets
-                _currentUser.value?.let { user ->
-                    dataRepository.saveBudgets(user.email, updatedBudgets)
-                }
-            }
-        }
-    }
-    
-    fun updateBudget(budget: Budget) {
-        viewModelScope.launch {
-            if (!useFirebase) {
-                val updatedBudgets = _budgets.value.map { 
-                    if (it.id == budget.id) budget else it
-                }
-                _budgets.value = updatedBudgets
-                _currentUser.value?.let { user ->
-                    dataRepository.saveBudgets(user.email, updatedBudgets)
-                }
-            }
-        }
-    }
-    
-    fun deleteBudget(budgetId: String) {
-        viewModelScope.launch {
-            if (!useFirebase) {
-                val updatedBudgets = _budgets.value.filter { it.id != budgetId }
-                _budgets.value = updatedBudgets
-                _currentUser.value?.let { user ->
-                    dataRepository.saveBudgets(user.email, updatedBudgets)
-                }
-            }
-        }
-    }
-    
-    // Document methods
-    fun addDocument(document: Document) {
-        viewModelScope.launch {
-            if (!useFirebase) {
-                val updatedDocuments = _documents.value + document
-                _documents.value = updatedDocuments
-                _currentUser.value?.let { user ->
-                    dataRepository.saveDocuments(user.email, updatedDocuments)
-                }
-            }
-        }
-    }
-    
-    fun deleteDocument(documentId: String) {
-        viewModelScope.launch {
-            if (!useFirebase) {
-                val updatedDocuments = _documents.value.filter { it.id != documentId }
-                _documents.value = updatedDocuments
-                _currentUser.value?.let { user ->
-                    dataRepository.saveDocuments(user.email, updatedDocuments)
-                }
-            }
-        }
-    }
-    
-    // Enhanced Review methods
-    fun addEnhancedReview(review: EnhancedReview) {
-        viewModelScope.launch {
-            if (!useFirebase) {
-                val updatedReviews = _enhancedReviews.value + review
-                _enhancedReviews.value = updatedReviews
-                _currentUser.value?.let { user ->
-                    dataRepository.saveEnhancedReviews(user.email, updatedReviews)
-                }
-            }
-        }
-    }
-    
-    fun updateEnhancedReview(review: EnhancedReview) {
-        viewModelScope.launch {
-            if (!useFirebase) {
-                val updatedReviews = _enhancedReviews.value.map { 
-                    if (it.id == review.id) review else it
-                }
-                _enhancedReviews.value = updatedReviews
-                _currentUser.value?.let { user ->
-                    dataRepository.saveEnhancedReviews(user.email, updatedReviews)
-                }
             }
         }
     }

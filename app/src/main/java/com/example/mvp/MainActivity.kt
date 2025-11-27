@@ -89,14 +89,6 @@ fun HomeApp(
                             "notifications" -> navController.navigate(Screen.Notifications.route)
                             "analytics" -> navController.navigate(Screen.Analytics.route)
                             "settings" -> navController.navigate(Screen.Settings.route)
-                            "properties" -> navController.navigate(Screen.Properties.route)
-                            "maintenance_reminders" -> navController.navigate(Screen.MaintenanceReminders.route)
-                            "search" -> navController.navigate(Screen.Search.route)
-                            "budget" -> navController.navigate(Screen.Budget.route)
-                            "documents" -> navController.navigate(Screen.Documents.route)
-                            "enhanced_schedule" -> navController.navigate(Screen.EnhancedSchedule.route)
-                            "advanced_analytics" -> navController.navigate(Screen.AdvancedAnalytics.route)
-                            "tenant_portal" -> navController.navigate(Screen.TenantPortal.route)
                             "rating" -> {
                                 val completedJob = jobs.find { it.status == "completed" }
                                 if (completedJob != null) {
@@ -493,138 +485,6 @@ fun HomeApp(
                 )
             }
 
-            composable(Screen.Properties.route) {
-                PropertiesScreen(
-                    onBack = { navController.popBackStack() },
-                    properties = viewModel.properties.collectAsState().value,
-                    onCreateProperty = { property ->
-                        viewModel.addProperty(property)
-                    },
-                    onUpdateProperty = { property ->
-                        viewModel.updateProperty(property)
-                    },
-                    onDeleteProperty = { propertyId ->
-                        viewModel.deleteProperty(propertyId)
-                    },
-                    onPropertyClick = { propertyId ->
-                        // Could navigate to property detail screen
-                    }
-                )
-            }
-            
-            composable(Screen.MaintenanceReminders.route) {
-                MaintenanceRemindersScreen(
-                    onBack = { navController.popBackStack() },
-                    reminders = viewModel.maintenanceReminders.collectAsState().value,
-                    onCreateReminder = { reminder ->
-                        viewModel.addMaintenanceReminder(reminder)
-                    },
-                    onUpdateReminder = { reminder ->
-                        viewModel.updateMaintenanceReminder(reminder)
-                    },
-                    onDeleteReminder = { reminderId ->
-                        viewModel.deleteMaintenanceReminder(reminderId)
-                    },
-                    properties = viewModel.properties.collectAsState().value
-                )
-            }
-            
-            composable(Screen.Search.route) {
-                SearchScreen(
-                    onBack = { navController.popBackStack() },
-                    tickets = tickets,
-                    jobs = jobs,
-                    onTicketClick = { ticketId ->
-                        navController.navigate(Screen.TicketDetail.createRoute(ticketId))
-                    },
-                    onJobClick = { jobId ->
-                        navController.navigate(Screen.JobDetail.createRoute(jobId))
-                    }
-                )
-            }
-            
-            composable(Screen.Budget.route) {
-                BudgetScreen(
-                    onBack = { navController.popBackStack() },
-                    budgets = viewModel.budgets.collectAsState().value,
-                    properties = viewModel.properties.collectAsState().value,
-                    onCreateBudget = { budget ->
-                        viewModel.addBudget(budget)
-                    },
-                    onUpdateBudget = { budget ->
-                        viewModel.updateBudget(budget)
-                    },
-                    onDeleteBudget = { budgetId ->
-                        viewModel.deleteBudget(budgetId)
-                    }
-                )
-            }
-            
-            composable(Screen.Documents.route) {
-                DocumentsScreen(
-                    onBack = { navController.popBackStack() },
-                    documents = viewModel.documents.collectAsState().value,
-                    onUploadDocument = { document ->
-                        viewModel.addDocument(document)
-                    },
-                    onDeleteDocument = { documentId ->
-                        viewModel.deleteDocument(documentId)
-                    }
-                )
-            }
-            
-            composable(Screen.EnhancedSchedule.route) {
-                EnhancedScheduleScreen(
-                    onBack = { navController.popBackStack() },
-                    onScheduleAppointment = { ticketId, date, time ->
-                        viewModel.scheduleTicket(ticketId, date, time)
-                    },
-                    onReschedule = { jobId, date, time ->
-                        // Handle rescheduling
-                    }
-                )
-            }
-            
-            composable(Screen.AdvancedAnalytics.route) {
-                AdvancedAnalyticsScreen(
-                    onBack = { navController.popBackStack() },
-                    tickets = tickets,
-                    jobs = jobs,
-                    contractors = contractors
-                )
-            }
-            
-            composable(Screen.TenantPortal.route) {
-                TenantPortalScreen(
-                    onBack = { navController.popBackStack() },
-                    onCreateTicket = {
-                        navController.navigate(Screen.CreateTicket.route)
-                    },
-                    onViewTickets = {
-                        navController.navigate(Screen.Dashboard.route)
-                    }
-                )
-            }
-            
-            composable(
-                route = Screen.EnhancedReview.route,
-                arguments = listOf(navArgument("jobId") { type = NavType.StringType })
-            ) { backStackEntry ->
-                val jobId = backStackEntry.arguments?.getString("jobId") ?: ""
-                val job = jobs.find { it.id == jobId }
-                val contractor = job?.let { contractors.find { c -> c.id == it.contractorId } }
-                
-                EnhancedReviewScreen(
-                    onBack = { navController.popBackStack() },
-                    contractor = contractor,
-                    jobId = jobId,
-                    onSubmitReview = { review ->
-                        viewModel.addEnhancedReview(review)
-                        navController.popBackStack()
-                    }
-                )
-            }
-
             composable(Screen.AIDiagnosis.route) {
                 val ticketsWithAI = tickets.filter { 
                     it.aiDiagnosis != null && it.status == TicketStatus.SUBMITTED 
@@ -673,13 +533,13 @@ fun HomeApp(
                                         fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
+                        Text(
                                         text = "AI diagnoses are automatically generated when tenants create tickets. Check back soon!",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                    )
-                                }
+                        )
+                    }
                             }
                         }
                     }
@@ -758,8 +618,8 @@ fun HomeApp(
                                     colors = CardDefaults.cardColors(
                                         containerColor = MaterialTheme.colorScheme.surface
                                     )
-                                ) {
-                                    Column(modifier = Modifier.padding(16.dp)) {
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
                                         Text(
                                             text = "AI Analysis",
                                             style = MaterialTheme.typography.titleSmall,
@@ -782,8 +642,8 @@ fun HomeApp(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    Button(
-                                        onClick = {
+                                Button(
+                                    onClick = {
                                             navController.navigate(Screen.TicketDetail.createRoute(ticket.id))
                                         },
                                         modifier = Modifier.weight(1f)
@@ -795,8 +655,8 @@ fun HomeApp(
                                             navController.navigate(Screen.Marketplace.createRoute(ticket.id))
                                         },
                                         modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text("Assign Contractor")
+                                ) {
+                                    Text("Assign Contractor")
                                     }
                                 }
                             }

@@ -274,9 +274,9 @@ fun CreateTicketScreen(
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = aiDiagnosisResult!!.diagnosis,
-                            style = MaterialTheme.typography.bodySmall,
+                    Text(
+                        text = aiDiagnosisResult!!.diagnosis,
+                        style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
                                 .fillMaxWidth()

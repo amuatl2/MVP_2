@@ -14,7 +14,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mvp.data.Property
-import com.example.mvp.data.Budget
+
+data class Budget(
+    val id: String,
+    val propertyId: String?,
+    val category: String,
+    val monthlyBudget: Float,
+    val yearlyBudget: Float,
+    val currentSpent: Float,
+    val alertThreshold: Float = 0.8f, // Alert when 80% spent
+    val isActive: Boolean = true
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -13,8 +13,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.mvp.data.Document
-import com.example.mvp.data.DocumentType
+
+data class Document(
+    val id: String,
+    val name: String,
+    val type: DocumentType,
+    val url: String,
+    val uploadedBy: String,
+    val uploadedDate: String,
+    val relatedTicketId: String? = null,
+    val relatedPropertyId: String? = null,
+    val size: Long? = null, // in bytes
+    val description: String? = null
+)
+
+enum class DocumentType {
+    INVOICE, RECEIPT, WARRANTY, CONTRACT, PHOTO, OTHER
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

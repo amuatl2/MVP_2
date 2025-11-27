@@ -16,7 +16,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mvp.data.Contractor
-import com.example.mvp.data.EnhancedReview
+
+data class EnhancedReview(
+    val id: String,
+    val contractorId: String,
+    val ticketId: String,
+    val jobId: String?,
+    val rating: Float, // Overall rating 1-5
+    val qualityRating: Float, // Work quality 1-5
+    val timelinessRating: Float, // On-time completion 1-5
+    val communicationRating: Float, // Communication 1-5
+    val valueRating: Float, // Value for money 1-5
+    val comment: String,
+    val photos: List<String> = emptyList(),
+    val reviewerEmail: String,
+    val reviewerName: String,
+    val timestamp: String,
+    val contractorResponse: String? = null,
+    val contractorResponseTimestamp: String? = null,
+    val isVerified: Boolean = false
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

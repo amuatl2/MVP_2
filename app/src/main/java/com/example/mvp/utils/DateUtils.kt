@@ -77,5 +77,27 @@ object DateUtils {
             null
         }
     }
+    
+    fun formatTimestamp(timestamp: String): String {
+        return try {
+            val date = dateTimeFormat.parse(timestamp) ?: return timestamp
+            val now = Date()
+            val diff = now.time - date.time
+            val seconds = diff / 1000
+            val minutes = seconds / 60
+            val hours = minutes / 60
+            val days = hours / 24
+            
+            when {
+                seconds < 60 -> "Just now"
+                minutes < 60 -> "$minutes minute${if (minutes > 1) "s" else ""} ago"
+                hours < 24 -> "$hours hour${if (hours > 1) "s" else ""} ago"
+                days < 7 -> "$days day${if (days > 1) "s" else ""} ago"
+                else -> formatDateForDisplay(timestamp.split("T").firstOrNull() ?: timestamp)
+            }
+        } catch (e: Exception) {
+            timestamp
+        }
+    }
 }
 

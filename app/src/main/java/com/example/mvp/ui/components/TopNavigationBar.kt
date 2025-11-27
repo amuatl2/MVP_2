@@ -30,21 +30,37 @@ fun TopNavigationBar(
             NavItem("Dashboard", "dashboard", Icons.Default.Home),
             NavItem("Ticket", "create_ticket", Icons.Default.Add),
             NavItem("Chat", "chat", Icons.Default.Email),
-            NavItem("History", "history", Icons.Default.Info)
+            NavItem("Notifications", "notifications", Icons.Default.Notifications),
+            NavItem("Search", "search", Icons.Default.Search),
+            NavItem("Portal", "tenant_portal", Icons.Default.Info),
+            NavItem("History", "history", Icons.Default.Info),
+            NavItem("Settings", "settings", Icons.Default.Settings)
         )
         UserRole.LANDLORD -> listOf(
             NavItem("Dashboard", "dashboard", Icons.Default.Home),
-            NavItem("Ticket", "create_ticket", Icons.Default.Add),
-            NavItem("Marketplace", "marketplace", Icons.Default.Person),
             NavItem("AI Diagnosis", "ai_diagnosis", Icons.Default.Info),
-            NavItem("History", "history", Icons.Default.Info)
+            NavItem("Marketplace", "marketplace", Icons.Default.Person),
+            NavItem("Properties", "properties", Icons.Default.Home),
+            NavItem("Maintenance", "maintenance_reminders", Icons.Default.Build),
+            NavItem("Budget", "budget", Icons.Default.Settings),
+            NavItem("Analytics", "analytics", Icons.Default.Settings),
+            NavItem("Advanced", "advanced_analytics", Icons.Default.Info),
+            NavItem("Documents", "documents", Icons.Default.Info),
+            NavItem("Search", "search", Icons.Default.Search),
+            NavItem("Notifications", "notifications", Icons.Default.Notifications),
+            NavItem("History", "history", Icons.Default.Info),
+            NavItem("Settings", "settings", Icons.Default.Settings)
         )
         UserRole.CONTRACTOR -> listOf(
             NavItem("Jobs", "contractor_dashboard", Icons.Default.Build),
             NavItem("Schedule", "schedule", Icons.Default.DateRange),
+            NavItem("Enhanced", "enhanced_schedule", Icons.Default.DateRange),
+            NavItem("Search", "search", Icons.Default.Search),
+            NavItem("Notifications", "notifications", Icons.Default.Notifications),
             NavItem("Rating", "rating", Icons.Default.Star),
             NavItem("History", "history", Icons.Default.Info),
-            NavItem("Chat", "chat", Icons.Default.Email)
+            NavItem("Chat", "chat", Icons.Default.Email),
+            NavItem("Settings", "settings", Icons.Default.Settings)
         )
     }
 

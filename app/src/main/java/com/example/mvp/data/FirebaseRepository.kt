@@ -200,7 +200,7 @@ class FirebaseRepository {
         awaitClose { listener?.remove() }
     }
     
-    // Contractors collection (read-only, managed separately)
+    // Contractors collection
     suspend fun getAllContractors(): List<Contractor> {
         if (!isAvailable()) return MockData.mockContractors
         return try {
@@ -214,6 +214,29 @@ class FirebaseRepository {
         } catch (e: Exception) {
             // Fallback to mock data if Firestore not set up
             MockData.mockContractors
+        }
+    }
+    
+    suspend fun saveContractor(contractor: Contractor) {
+        if (!isAvailable()) return
+        val contractorMap = mapOf(
+            "id" to contractor.id,
+            "name" to contractor.name,
+            "company" to contractor.company,
+            "specialization" to contractor.specialization,
+            "rating" to contractor.rating,
+            "distance" to contractor.distance,
+            "preferred" to contractor.preferred,
+            "completedJobs" to contractor.completedJobs
+        )
+        
+        try {
+            db?.collection("contractors")
+                ?.document(contractor.id)
+                ?.set(contractorMap)
+                ?.await()
+        } catch (e: Exception) {
+            // Error saving - ignore
         }
     }
     

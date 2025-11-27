@@ -27,5 +27,19 @@ sealed class Screen(val route: String) {
     object History : Screen("history")
     object Chat : Screen("chat")
     object AIDiagnosis : Screen("ai_diagnosis")
+    object Notifications : Screen("notifications")
+    object Analytics : Screen("analytics")
+    object Properties : Screen("properties")
+    object MaintenanceReminders : Screen("maintenance_reminders")
+    object Search : Screen("search")
+    object EnhancedReview : Screen("enhanced_review/{jobId}") {
+        fun createRoute(jobId: String) = "enhanced_review/$jobId"
+    }
+    object Settings : Screen("settings")
+    object Budget : Screen("budget")
+    object Documents : Screen("documents")
+    object EnhancedSchedule : Screen("enhanced_schedule")
+    object AdvancedAnalytics : Screen("advanced_analytics")
+    object TenantPortal : Screen("tenant_portal")
 }
 

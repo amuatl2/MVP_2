@@ -19,6 +19,7 @@ class DataRepository(private val context: Context) {
     private fun ticketsKey(userEmail: String) = stringPreferencesKey("tickets_$userEmail")
     private fun jobsKey(userEmail: String) = stringPreferencesKey("jobs_$userEmail")
     private val currentUserKey = stringPreferencesKey("current_user")
+    private val registeredUsersKey = stringPreferencesKey("registered_users")
     
     // Save current user
     suspend fun saveCurrentUser(user: User) {
@@ -32,6 +33,38 @@ class DataRepository(private val context: Context) {
         val userJson = context.dataStore.data.first()[currentUserKey] ?: return null
         return try {
             gson.fromJson(userJson, User::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    suspend fun saveRegisteredUser(credential: LocalCredential) {
+        context.dataStore.edit { preferences ->
+            val currentJson = preferences[registeredUsersKey]
+            val type = object : TypeToken<List<LocalCredential>>() {}.type
+            val currentList = try {
+                gson.fromJson<List<LocalCredential>>(currentJson, type)?.toMutableList()
+            } catch (e: Exception) {
+                null
+            } ?: mutableListOf()
+
+            val existingIndex = currentList.indexOfFirst { it.email.equals(credential.email, ignoreCase = true) }
+            if (existingIndex >= 0) {
+                currentList[existingIndex] = credential
+            } else {
+                currentList.add(credential)
+            }
+
+            preferences[registeredUsersKey] = gson.toJson(currentList)
+        }
+    }
+
+    suspend fun getRegisteredUser(email: String): LocalCredential? {
+        val usersJson = context.dataStore.data.first()[registeredUsersKey] ?: return null
+        return try {
+            val listType = object : TypeToken<List<LocalCredential>>() {}.type
+            val users = gson.fromJson<List<LocalCredential>>(usersJson, listType) ?: return null
+            users.firstOrNull { it.email.equals(email, ignoreCase = true) }
         } catch (e: Exception) {
             null
         }
@@ -144,12 +177,112 @@ class DataRepository(private val context: Context) {
         return allJobs
     }
     
+    // Properties
+    private fun propertiesKey(userEmail: String) = stringPreferencesKey("properties_$userEmail")
+    
+    suspend fun saveProperties(userEmail: String, properties: List<Property>) {
+        context.dataStore.edit { preferences ->
+            preferences[propertiesKey(userEmail)] = gson.toJson(properties)
+        }
+    }
+    
+    suspend fun getProperties(userEmail: String): List<Property> {
+        val propertiesJson = context.dataStore.data.first()[propertiesKey(userEmail)] ?: return emptyList()
+        return try {
+            val listType = object : TypeToken<List<Property>>() {}.type
+            gson.fromJson(propertiesJson, listType) ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    // Maintenance Reminders
+    private fun remindersKey(userEmail: String) = stringPreferencesKey("reminders_$userEmail")
+    
+    suspend fun saveMaintenanceReminders(userEmail: String, reminders: List<MaintenanceReminder>) {
+        context.dataStore.edit { preferences ->
+            preferences[remindersKey(userEmail)] = gson.toJson(reminders)
+        }
+    }
+    
+    suspend fun getMaintenanceReminders(userEmail: String): List<MaintenanceReminder> {
+        val remindersJson = context.dataStore.data.first()[remindersKey(userEmail)] ?: return emptyList()
+        return try {
+            val listType = object : TypeToken<List<MaintenanceReminder>>() {}.type
+            gson.fromJson(remindersJson, listType) ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    // Budgets
+    private fun budgetsKey(userEmail: String) = stringPreferencesKey("budgets_$userEmail")
+    
+    suspend fun saveBudgets(userEmail: String, budgets: List<Budget>) {
+        context.dataStore.edit { preferences ->
+            preferences[budgetsKey(userEmail)] = gson.toJson(budgets)
+        }
+    }
+    
+    suspend fun getBudgets(userEmail: String): List<Budget> {
+        val budgetsJson = context.dataStore.data.first()[budgetsKey(userEmail)] ?: return emptyList()
+        return try {
+            val listType = object : TypeToken<List<Budget>>() {}.type
+            gson.fromJson(budgetsJson, listType) ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    // Documents
+    private fun documentsKey(userEmail: String) = stringPreferencesKey("documents_$userEmail")
+    
+    suspend fun saveDocuments(userEmail: String, documents: List<Document>) {
+        context.dataStore.edit { preferences ->
+            preferences[documentsKey(userEmail)] = gson.toJson(documents)
+        }
+    }
+    
+    suspend fun getDocuments(userEmail: String): List<Document> {
+        val documentsJson = context.dataStore.data.first()[documentsKey(userEmail)] ?: return emptyList()
+        return try {
+            val listType = object : TypeToken<List<Document>>() {}.type
+            gson.fromJson(documentsJson, listType) ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    // Enhanced Reviews
+    private fun enhancedReviewsKey(userEmail: String) = stringPreferencesKey("enhanced_reviews_$userEmail")
+    
+    suspend fun saveEnhancedReviews(userEmail: String, reviews: List<EnhancedReview>) {
+        context.dataStore.edit { preferences ->
+            preferences[enhancedReviewsKey(userEmail)] = gson.toJson(reviews)
+        }
+    }
+    
+    suspend fun getEnhancedReviews(userEmail: String): List<EnhancedReview> {
+        val reviewsJson = context.dataStore.data.first()[enhancedReviewsKey(userEmail)] ?: return emptyList()
+        return try {
+            val listType = object : TypeToken<List<EnhancedReview>>() {}.type
+            gson.fromJson(reviewsJson, listType) ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
     // Clear user data (on logout)
     @Suppress("UNUSED")
     suspend fun clearUserData(userEmail: String) {
         context.dataStore.edit { preferences ->
             preferences.remove(ticketsKey(userEmail))
             preferences.remove(jobsKey(userEmail))
+            preferences.remove(propertiesKey(userEmail))
+            preferences.remove(remindersKey(userEmail))
+            preferences.remove(budgetsKey(userEmail))
+            preferences.remove(documentsKey(userEmail))
+            preferences.remove(enhancedReviewsKey(userEmail))
         }
     }
 }

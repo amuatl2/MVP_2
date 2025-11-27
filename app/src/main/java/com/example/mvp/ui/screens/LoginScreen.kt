@@ -16,6 +16,7 @@ import com.example.mvp.data.UserRole
 @Composable
 fun LoginScreen(
     onLogin: (String, String, UserRole, Boolean) -> Unit,
+    onUseDemo: (UserRole) -> Unit,
     onCreateAccount: () -> Unit,
     authError: String? = null
 ) {
@@ -157,12 +158,25 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = { onLogin(email.ifEmpty { "user@example.com" }, password, selectedRole, rememberMe) },
+            onClick = { 
+                onLogin(email, password, selectedRole, rememberMe)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
         ) {
             Text("Login", fontSize = 16.sp)
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedButton(
+            onClick = { onUseDemo(selectedRole) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp)
+        ) {
+            Text("Use Demo Account", fontSize = 15.sp)
         }
 
         authError?.let { error ->

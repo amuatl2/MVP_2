@@ -107,7 +107,8 @@ fun TenantDashboardScreen(
                             Text(
                                 text = ticket.title,
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.fillMaxWidth()
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
@@ -267,32 +268,73 @@ fun LandlordDashboardScreen(
         }
 
         // AI Diagnosis Available Section
-        if (aiDiagnosisTickets.isNotEmpty()) {
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (aiDiagnosisTickets.isNotEmpty()) 
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
+                    else 
+                        MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "AI Diagnosis Available",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "New tickets with automatic categorization",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text("🤖", fontSize = 24.sp)
+                                Text(
+                                    text = "AI Diagnosis Available",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (aiDiagnosisTickets.isNotEmpty()) 
+                                    "${aiDiagnosisTickets.size} ticket(s) with AI analysis ready for review"
+                                else 
+                                    "AI diagnoses appear here when tenants create tickets",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                        if (aiDiagnosisTickets.isNotEmpty()) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = MaterialTheme.shapes.small
+                            ) {
+                                Text(
+                                    text = "${aiDiagnosisTickets.size}",
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
+                    }
+                    
+                    if (aiDiagnosisTickets.isEmpty()) {
                         Spacer(modifier = Modifier.height(16.dp))
-
+                        Text(
+                            text = "No AI diagnoses yet. When tenants create maintenance tickets, our AI automatically analyzes them and provides detailed insights including issue categorization, severity assessment, cost estimates, and recommended actions.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(16.dp))
                         aiDiagnosisTickets.take(3).forEach { ticket ->
                             Card(
                                 onClick = { onTicketClick(ticket.id) },
@@ -300,7 +342,7 @@ fun LandlordDashboardScreen(
                                     .fillMaxWidth()
                                     .padding(vertical = 8.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                                    containerColor = MaterialTheme.colorScheme.surface
                                 )
                             ) {
                                 Column(
@@ -319,15 +361,71 @@ fun LandlordDashboardScreen(
                                                 style = MaterialTheme.typography.titleMedium,
                                                 fontWeight = FontWeight.Medium
                                             )
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            ticket.aiDiagnosis?.let {
-                                                Text(
-                                                    text = it,
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                                )
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Surface(
+                                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                                    shape = MaterialTheme.shapes.small
+                                                ) {
+                                                    Text(
+                                                        text = ticket.category,
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                        style = MaterialTheme.typography.labelSmall
+                                                    )
+                                                }
+                                                if (ticket.priority != null) {
+                                                    Surface(
+                                                        color = when (ticket.priority.lowercase()) {
+                                                            "urgent" -> MaterialTheme.colorScheme.errorContainer
+                                                            "high" -> MaterialTheme.colorScheme.tertiaryContainer
+                                                            else -> MaterialTheme.colorScheme.surfaceVariant
+                                                        },
+                                                        shape = MaterialTheme.shapes.small
+                                                    ) {
+                                                        Text(
+                                                            text = ticket.priority,
+                                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                                            style = MaterialTheme.typography.labelSmall
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            ticket.aiDiagnosis?.let { diagnosis ->
+                                                Card(
+                                                    colors = CardDefaults.cardColors(
+                                                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                                                    )
+                                                ) {
+                                                    Column(modifier = Modifier.padding(12.dp)) {
+                                                        Row(
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                        ) {
+                                                            Text("🤖", fontSize = 16.sp)
+                                                            Text(
+                                                                text = "AI Analysis",
+                                                                style = MaterialTheme.typography.labelMedium,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = MaterialTheme.colorScheme.primary
+                                                            )
+                                                        }
+                                                        Spacer(modifier = Modifier.height(6.dp))
+                                                        Text(
+                                                            text = diagnosis.take(200) + if (diagnosis.length > 200) "..." else "",
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                                            modifier = Modifier.fillMaxWidth(),
+                                                            maxLines = 4
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
+                                        Spacer(modifier = Modifier.width(12.dp))
                                         Surface(
                                             color = MaterialTheme.colorScheme.secondaryContainer,
                                             shape = MaterialTheme.shapes.small
@@ -358,6 +456,15 @@ fun LandlordDashboardScreen(
                                         }
                                     }
                                 }
+                            }
+                        }
+                        if (aiDiagnosisTickets.size > 3) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(
+                                onClick = { onAIDiagnosis() },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("View All ${aiDiagnosisTickets.size} AI Diagnoses →")
                             }
                         }
                     }
@@ -440,13 +547,15 @@ fun LandlordDashboardScreen(
                             Text(
                                 text = ticket.title,
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Medium
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.fillMaxWidth()
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = ticket.description.take(80) + if (ticket.description.length > 80) "..." else "",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                modifier = Modifier.fillMaxWidth()
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(

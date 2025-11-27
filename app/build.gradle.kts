@@ -56,13 +56,31 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.datastore.preferences)
     implementation(libs.gson)
-    
+
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.play.services.auth)
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-storage")
+    implementation("com.google.firebase:firebase-messaging")
     
+    // Image processing
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    
+    // PDF generation
+    implementation("com.itextpdf:itext7-core:8.0.2")
+    
+    // Biometric
+    implementation("androidx.biometric:biometric:1.1.0")
+    
+    // Permissions
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+    
+    // ExifInterface for image orientation
+    implementation("androidx.exifinterface:exifinterface:1.3.6")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -71,5 +89,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    
+
 }
+

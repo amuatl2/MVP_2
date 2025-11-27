@@ -23,18 +23,27 @@ import android.provider.MediaStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mvp.viewmodel.HomeViewModel
+import com.example.mvp.ai.AIDiagnosisResult
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 
 @Composable
 fun CreateTicketScreen(
     onBack: () -> Unit,
-    onSubmit: (String, String, String, String) -> Unit
+    onSubmit: (String, String, String, String) -> Unit,
+    viewModel: HomeViewModel = viewModel()
 ) {
     val context = LocalContext.current
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
-    var showAIMessage by remember { mutableStateOf(false) }
+    var priority by remember { mutableStateOf("Medium") }
+    var aiDiagnosisResult by remember { mutableStateOf<AIDiagnosisResult?>(null) }
+    var isAnalyzing by remember { mutableStateOf(false) }
     var submitted by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     if (submitted) {
         SuccessScreen(
@@ -148,9 +157,25 @@ fun CreateTicketScreen(
 
         var expanded by remember { mutableStateOf(false) }
         var priorityExpanded by remember { mutableStateOf(false) }
-        var priority by remember { mutableStateOf("Medium") }
         val categories = listOf("Plumbing", "Electrical", "HVAC", "Appliance", "General Maintenance")
         val priorities = listOf("Low", "Medium", "High", "Urgent")
+        
+        // Trigger AI analysis when category, description, or priority changes
+        LaunchedEffect(category, description, priority) {
+            if (category.isNotEmpty() && description.length > 10) {
+                isAnalyzing = true
+                try {
+                    val result = viewModel.generateAIDiagnosis(title, description, category, priority)
+                    aiDiagnosisResult = result
+                } catch (e: Exception) {
+                    // Error generating diagnosis - will use fallback
+                } finally {
+                    isAnalyzing = false
+                }
+            } else {
+                aiDiagnosisResult = null
+            }
+        }
 
         Box {
             OutlinedTextField(
@@ -178,30 +203,262 @@ fun CreateTicketScreen(
                         onClick = {
                             category = cat
                             expanded = false
-                            showAIMessage = true
-                            CoroutineScope(Dispatchers.Main).launch {
-                                kotlinx.coroutines.delay(3000)
-                                showAIMessage = false
-                            }
                         }
                     )
                 }
             }
         }
 
-        if (showAIMessage) {
+        // AI Diagnosis Preview
+        if (isAnalyzing) {
             Spacer(modifier = Modifier.height(8.dp))
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "🤖 AI Suggestion: Category \"$category\" detected. Suggested diagnosis will appear after submission.",
-                    modifier = Modifier.padding(12.dp),
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "AI is analyzing your issue...",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+        } else if (aiDiagnosisResult != null && category.isNotEmpty() && description.length > 10) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("🤖", fontSize = 24.sp)
+                        Text(
+                            text = "AI Diagnosis Preview",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(
+                            text = "${(aiDiagnosisResult!!.confidence * 100).toInt()}% confidence",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = aiDiagnosisResult!!.diagnosis,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            lineHeight = 18.sp
+                        )
+                    }
+                    
+                    // Root Cause Analysis
+                    aiDiagnosisResult!!.rootCauseAnalysis?.let { rootCause ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Root Cause Analysis:",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = rootCause,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 4.dp, top = 2.dp)
+                        )
+                    }
+                    
+                    // Safety Warnings
+                    if (aiDiagnosisResult!!.safetyWarnings.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "⚠️ Safety Warnings:",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                aiDiagnosisResult!!.safetyWarnings.take(2).forEach { warning ->
+                                    Text(
+                                        text = "• $warning",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Parts Needed
+                    if (aiDiagnosisResult!!.partsNeeded.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Parts/Materials Needed:",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        aiDiagnosisResult!!.partsNeeded.take(3).forEach { part ->
+                            Text(
+                                text = "• $part",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                            )
+                        }
+                    }
+                    
+                    // DIY Recommendation
+                    aiDiagnosisResult!!.diyRecommendation?.let { diy ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "🔧 DIY Assessment:",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                                Text(
+                                    text = diy,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Preventive Maintenance
+                    if (aiDiagnosisResult!!.preventiveMaintenance.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "💡 Preventive Maintenance Tips:",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        aiDiagnosisResult!!.preventiveMaintenance.take(2).forEach { tip ->
+                            Text(
+                                text = "• $tip",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                            )
+                        }
+                    }
+                    
+                    // Cost and Time Estimates
+                    if (aiDiagnosisResult!!.estimatedCost != null || aiDiagnosisResult!!.estimatedTime != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            aiDiagnosisResult!!.estimatedCost?.let { cost ->
+                                Surface(
+                                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                                    shape = MaterialTheme.shapes.small
+                                ) {
+                                    Text(
+                                        text = "💰 $cost",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                            }
+                            aiDiagnosisResult!!.estimatedTime?.let { time ->
+                                Surface(
+                                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                                    shape = MaterialTheme.shapes.small
+                                ) {
+                                    Text(
+                                        text = "⏱️ $time",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Suggested Actions
+                    if (aiDiagnosisResult!!.suggestedActions.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Recommended Actions:",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                        aiDiagnosisResult!!.suggestedActions.take(3).forEach { action ->
+                            Text(
+                                text = "• $action",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                            )
+                        }
+                        if (aiDiagnosisResult!!.suggestedActions.size > 3) {
+                            Text(
+                                text = "• ...and ${aiDiagnosisResult!!.suggestedActions.size - 3} more",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
 
